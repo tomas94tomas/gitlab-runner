@@ -1,0 +1,71 @@
+---
+- name: Create a gtilab runner volume for gitlab runner with options
+  community.docker.docker_volume:
+    name: RND1-shared-gitlab-runner-config
+
+- name: Start Gitlab Runner
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    networks:
+      - name: fltechnics
+    state: started
+    published_ports:
+      - "9254:9252"
+    restart_policy: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - RND1-shared-gitlab-runner-config:/etc/gitlab-runner
+    labels:
+      logging: "runnner_logs"
+
+- name: Check if GitLab Runner configuration exists
+  ansible.builtin.command: docker run --rm -v RND1-shared-gitlab-runner-config:/etc/gitlab-runner gitlab/gitlab-runner list
+  register: configured_runners
+  changed_when: false
+
+- name: Determine if registration is needed
+  ansible.builtin.set_fact:
+    runner_registration_needed: "{{ gitlab_runner_description not in configured_runners.stderr }}"
+  changed_when: false
+
+- name: Register gitlab runner if registration is empty
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    auto_remove: true
+    networks:
+      - name: fltechnics
+    published_ports:
+      - "9254:9252"
+    volumes:
+      - RND1-shared-gitlab-runner-config:/etc/gitlab-runner
+    command: >
+      register --non-interactive
+      --executor "docker"
+      --docker-image "docker:dind"
+      --docker-volumes "/var/run/docker.sock:/var/run/docker.sock"
+      --url "https://gitlab.fltechnics.com"
+      --registration-token "{{ gitlab_runner_rnd_token }}"
+      --description "{{ gitlab_runner_description }}"
+      --run-untagged="true"
+      --locked="false"
+      --access-level="not_protected"
+  when: runner_registration_needed
+
+- name: Start GitLab Runner after registration
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    networks:
+      - name: fltechnics
+    state: started
+    published_ports:
+      - "9254:9252"
+    restart_policy: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - RND1-shared-gitlab-runner-config:/etc/gitlab-runner
+    labels:
+      logging: "runnner_logs"
+  when: runner_registration_needed

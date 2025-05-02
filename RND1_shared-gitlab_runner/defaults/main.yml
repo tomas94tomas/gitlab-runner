@@ -1,0 +1,4 @@
+---
+# defaults file for Gitlab Runner
+gitlab_runner_description: "RND1-shared-docker-shell-runner"
+gitlab_runner_image: "gitlab/gitlab-runner:latest"

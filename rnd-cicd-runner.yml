@@ -1,0 +1,25 @@
+---
+- name: Play to start RND-INFRA runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - RND_INFRA_group-gitlab_runner
+
+- name: Play to start RND shared runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - RND_shared-gitlab_runner
+
+- name: Play to start RND1 runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - RND1_shared-gitlab_runner
+
+- name: Play to start TRAIN1 runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - TRAIN1_group-gitlab_runner
+
+- name: Play to start TRAIN2 runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - TRAIN2_group-gitlab_runner

@@ -1,0 +1,5 @@
+---
+- name: Play to start grafana_promtail container
+  hosts: FLT-CICD-RND
+  roles:
+    - grafana_promtail

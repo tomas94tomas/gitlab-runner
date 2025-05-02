@@ -1,0 +1,71 @@
+---
+- name: Create a GitLab Runner volume for GitLab Runner with options
+  community.docker.docker_volume:
+    name: RND-INFRA-group-gitlab-runner-config
+
+- name: Start GitLab Runner
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    networks:
+      - name: fltechnics
+    state: started
+    published_ports:
+      - "9255:9252"
+    restart_policy: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.ssh/known_hosts:/root/.ssh/known_hosts
+      - RND-INFRA-group-gitlab-runner-config:/etc/gitlab-runner
+
+- name: Check if GitLab Runner configuration exists
+  ansible.builtin.command: docker run --rm -v RND-INFRA-group-gitlab-runner-config:/etc/gitlab-runner gitlab/gitlab-runner list
+  register: configured_runners
+  changed_when: false
+
+- name: Determine if registration is needed
+  ansible.builtin.set_fact:
+    runner_registration_needed: "{{ gitlab_runner_description not in configured_runners.stderr }}"
+  changed_when: false
+
+- name: Register GitLab Runner if registration is empty
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    auto_remove: true
+    networks:
+      - name: fltechnics
+    published_ports:
+      - "9255:9252"
+    volumes:
+      - RND-INFRA-group-gitlab-runner-config:/etc/gitlab-runner
+      - /root/.ssh/known_hosts:/root/.ssh/known_hosts
+    command: >
+      register --non-interactive
+      --executor "docker"
+      --docker-image "docker:dind"
+      --docker-volumes "/var/run/docker.sock:/var/run/docker.sock"
+      --docker-volumes "/root/.ssh/known_hosts:/root/.ssh/known_hosts"
+      --url "https://gitlab.fltechnics.com"
+      --registration-token "{{ gitlab_runner_rnd_infra_token }}"
+      --description "{{ gitlab_runner_description }}"
+      --run-untagged="true"
+      --locked="false"
+      --access-level="not_protected"
+  when: runner_registration_needed
+
+- name: Start GitLab Runner after registration
+  community.docker.docker_container:
+    name: "{{ gitlab_runner_description }}"
+    image: gitlab/gitlab-runner:latest
+    networks:
+      - name: fltechnics
+    state: started
+    published_ports:
+      - "9255:9252"
+    restart_policy: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.ssh/known_hosts:/root/.ssh/known_hosts
+      - RND-INFRA-group-gitlab-runner-config:/etc/gitlab-runner
+  when: runner_registration_needed

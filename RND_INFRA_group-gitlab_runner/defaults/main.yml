@@ -1,0 +1,5 @@
+---
+# defaults file for Gitlab Runner
+gitlab_runner_description: "RND-INFRA-group-docker-shell-runner"
+gitlab_runner_volume_name: "RND-INFRA-group-gitlab-runner-config"
+gitlab_runner_image: "gitlab/gitlab-runner:latest"

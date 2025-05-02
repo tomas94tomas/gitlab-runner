@@ -1,0 +1,35 @@
+---
+- name: Create a promtail configuration directory
+  ansible.builtin.file:
+    path: /etc/promtail
+    state: directory
+    mode: '0755'
+    owner: "1001"
+    group: "1001"
+
+- name: Copy promtail configuration
+  ansible.builtin.copy:
+    src: promtail-config.yml
+    dest: /etc/promtail/promtail-config.yml
+    mode: '0755'
+    owner: "1001"
+    group: "1001"
+
+- name: Create the web network
+  community.docker.docker_network:
+    name: grafana_promtail
+
+- name: Start promtail
+  community.docker.docker_container:
+    name: grafana_promtail
+    image: grafana/promtail:latest
+    networks:
+      - name: fltechnics
+    state: started
+    restart_policy: always
+    command:
+      - '--config.file=/etc/promtail/config.yml'
+      - '--config.expand-env=true'
+    volumes:
+      - /etc/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
