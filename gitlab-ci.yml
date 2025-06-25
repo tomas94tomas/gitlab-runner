@@ -35,5 +35,6 @@ deploy:
   script:
     - apt-get update && apt-get install -y ansible
     - pip3 install docker
-    - ansible-playbook -i hosts rnd-cicd-runner.yml -u root  -e "gitlab_runner_rnd_infra_token=$GITLAB_RUNNER_RND_INFRA_TOKEN gitlab_runner_rnd_token=$GITLAB_RUNNER_RND_TOKEN gitlab_runner_train_token=$GITLAB_RUNNER_TRAIN_TOKEN"
+    - ansible-playbook -i hosts rnd-cicd-runner.yml -u root  -e "gitlab_runner_automation_token=$GITLAB_RUNNER_AUTOMATION_TOKEN gitlab_runner_rnd_infra_token=$GITLAB_RUNNER_RND_INFRA_TOKEN gitlab_runner_rnd_token=$GITLAB_RUNNER_RND_TOKEN gitlab_runner_train_token=$GITLAB_RUNNER_TRAIN_TOKEN"
     - ansible-playbook -i hosts grafana-promtail.yml -u root
+  when: manual
