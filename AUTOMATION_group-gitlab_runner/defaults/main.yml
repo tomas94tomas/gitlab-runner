@@ -1,0 +1,3 @@
+---
+gitlab_runner_description: "AUTOMATION-group-docker-shell-runner"
+gitlab_runner_image: "gitlab/gitlab-runner:latest"
