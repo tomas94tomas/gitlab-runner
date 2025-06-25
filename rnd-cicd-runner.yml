@@ -23,3 +23,8 @@
   hosts: FLT-CICD-RND
   roles:
     - TRAIN2_group-gitlab_runner
+
+- name: Play to start AUTOMATION runner container
+  hosts: FLT-CICD-RND
+  roles:
+    - AUTOMATION_group-gitlab_runner
